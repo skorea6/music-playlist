@@ -45,7 +45,7 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(requestPermitAllUrl)
                         .anonymous()
-                        .requestMatchers("/api/map/place/delete", "/api/event/delete").hasRole("ADMIN")
+//                        .requestMatchers("/api/map/place/delete", "/api/event/delete").hasRole("ADMIN")
                         .requestMatchers("/member/**").hasRole("MEMBER")
                         .anyRequest().permitAll()
                 )
@@ -81,8 +81,4 @@ public class SecurityConfig {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
-//    @Bean
-//    public GrantedAuthorityDefaults grantedAuthorityDefaults() {
-//        return new GrantedAuthorityDefaults(""); // 역할 접두사를 제거
-//    }
 }
