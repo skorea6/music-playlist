@@ -27,18 +27,18 @@ public class PlaylistApiController {
     @PostMapping("/create")
     public BaseResponse<PlaylistCreateDtoResponse> createPlaylist(@RequestBody @Valid PlaylistCreateDtoRequest request) {
         securityService.checkIsLogined();
-
         String memberUserId = securityService.getMemberUserId();
+
         PlaylistCreateDtoResponse response = playlistService.createPlaylist(memberUserId, request);
         return new BaseResponse<>(response);
     }
 
-    /**
-     * 관리자만 이용 가능
-     */
     @PostMapping("/delete")
     public BaseResponse<Object> deletePlaylist(@RequestBody @Valid PlaylistDeleteDtoRequest request) {
-        String resultMsg = playlistService.deletePlaylist(request);
+        securityService.checkIsLogined();
+        String memberUserId = securityService.getMemberUserId();
+
+        String resultMsg = playlistService.deletePlaylist(memberUserId, request);
         return new BaseResponse<>(resultMsg);
     }
 }

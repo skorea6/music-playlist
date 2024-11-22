@@ -37,13 +37,13 @@ public class MemberController {
     }
 
 
-    @GetMapping("/signup/final")
-    public String signupFinal() {
-        return "signup/final";
+    @GetMapping("/signup")
+    public String signup() {
+        return "signup/index";
     }
 
-    @PostMapping("/signup/final")
-    public String signUpFinalAction(@Valid @ModelAttribute MemberSignUpDtoRequest request, BindingResult result, RedirectAttributes redirectAttributes) {
+    @PostMapping("/signup")
+    public String signUpAction(@Valid @ModelAttribute MemberSignUpDtoRequest request, BindingResult result, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             Map<String, String> errors = result.getFieldErrors().stream()
                     .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage, (message1, message2) -> message1));
@@ -67,7 +67,7 @@ public class MemberController {
         }
         redirectAttributes.addFlashAttribute("data", request);
 
-        return "redirect:/member/signup/final";
+        return "redirect:/member/signup";
     }
 
     private static void basicFlashProcess(HttpServletRequest request, Model model, Object data) {

@@ -10,4 +10,8 @@ import lombok.Setter;
 public class PlaylistDetailDtoRequest {
     @NotBlank(message = "code는 필수 입력 값입니다.")
     private String code;
+
+    public PlaylistDetailDtoRequest(String code) {
+        this.code = code;
+    }
 }

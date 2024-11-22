@@ -33,27 +33,36 @@ public class MusicApiController {
     @PostMapping("/add")
     public BaseResponse<MusicAddDtoResponse> addMusic(@RequestBody @Valid MusicAddDtoRequest request) {
         securityService.checkIsLogined();
-
         String memberUserId = securityService.getMemberUserId();
+
         MusicAddDtoResponse response = musicService.addMusic(memberUserId, request);
         return new BaseResponse<>(response);
     }
 
     @PostMapping("/update-sync")
     public BaseResponse<Object> updateSync(@RequestBody @Valid MusicUpdateSyncDtoRequest request) {
-        String resultMsg = musicService.updateSync(request);
+        securityService.checkIsLogined();
+        String memberUserId = securityService.getMemberUserId();
+
+        String resultMsg = musicService.updateSync(memberUserId, request);
         return new BaseResponse<>(resultMsg);
     }
 
     @PostMapping("/to-playlist")
     public BaseResponse<Object> toPlaylist(@RequestBody @Valid MusicUpdateToPlaylistDtoRequest request) {
-        String resultMsg = musicService.toPlaylist(request);
+        securityService.checkIsLogined();
+        String memberUserId = securityService.getMemberUserId();
+
+        String resultMsg = musicService.toPlaylist(memberUserId, request);
         return new BaseResponse<>(resultMsg);
     }
 
     @PostMapping("/delete")
     public BaseResponse<Object> deleteMusic(@RequestBody @Valid MusicDeleteDtoRequest request) {
-        String resultMsg = musicService.deleteMusic(request);
+        securityService.checkIsLogined();
+        String memberUserId = securityService.getMemberUserId();
+
+        String resultMsg = musicService.deleteMusic(memberUserId, request);
         return new BaseResponse<>(resultMsg);
     }
 }
