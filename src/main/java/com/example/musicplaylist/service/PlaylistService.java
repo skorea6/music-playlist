@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 
@@ -53,7 +54,7 @@ public class PlaylistService {
     }
 
     public PlaylistCreateDtoResponse createPlaylist(String memberUserId, PlaylistCreateDtoRequest playlistCreateDtoRequest){
-        String code = RandomUtil.generateRandomString(15);
+        String code = RandomUtil.generateRandomString(4);
         Playlist entity = new Playlist(
                 code,
                 playlistCreateDtoRequest.getName(),
@@ -64,11 +65,15 @@ public class PlaylistService {
         return new PlaylistCreateDtoResponse(code);
     }
 
-    public String deletePlaylist(PlaylistDeleteDtoRequest playlistDeleteDtoRequest){
+    public String deletePlaylist(String memberUserId, PlaylistDeleteDtoRequest playlistDeleteDtoRequest){
         Playlist playlist = playlistRepository.findByCode(playlistDeleteDtoRequest.getCode());
 
         if (playlist == null) {
             throw new IllegalArgumentException("찾을 수 없는 플레이리스트입니다.");
+        }
+
+        if (!Objects.equals(playlist.getMember().getUserId(), memberUserId)) {
+            throw new IllegalArgumentException("권한이 없습니다.");
         }
 
         playlist.delete();

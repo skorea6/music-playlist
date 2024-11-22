@@ -15,6 +15,7 @@ import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -80,6 +81,10 @@ public class MusicService {
             throw new IllegalArgumentException("유효하지 않은 유튜브 링크입니다.");
         }
 
+        if (!Objects.equals(playlist.getMember().getUserId(), memberUserId)) {
+            throw new IllegalArgumentException("권한이 없습니다.");
+        }
+
         try {
             Document doc = Jsoup.connect(generateYouTubeUrl(youtubeId, null))
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
@@ -102,10 +107,14 @@ public class MusicService {
     /**
      * 유튜브 영상 싱크 맞추기
      */
-    public String updateSync(MusicUpdateSyncDtoRequest request){
+    public String updateSync(String memberUserId, MusicUpdateSyncDtoRequest request){
         Music music = musicRepository.findById(request.getId()).orElseThrow(
                 () -> new IllegalArgumentException("찾을 수 없는 음악입니다.")
         );
+
+        if (!Objects.equals(music.getMember().getUserId(), memberUserId)) {
+            throw new IllegalArgumentException("권한이 없습니다.");
+        }
 
         music.updateSync(request.getTime());
         return "음악 영상의 싱크를 맞췄습니다.";
@@ -114,10 +123,14 @@ public class MusicService {
     /**
      * 음악을 플레이리스트로 이동
      */
-    public String toPlaylist(MusicUpdateToPlaylistDtoRequest request){
+    public String toPlaylist(String memberUserId, MusicUpdateToPlaylistDtoRequest request){
         Music music = musicRepository.findById(request.getId()).orElseThrow(
                 () -> new IllegalArgumentException("찾을 수 없는 음악입니다.")
         );
+
+        if (!Objects.equals(music.getMember().getUserId(), memberUserId)) {
+            throw new IllegalArgumentException("권한이 없습니다.");
+        }
 
         music.updateToPlaylist();
         return "음악을 플레이리스트로 이동했습니다.";
@@ -126,10 +139,14 @@ public class MusicService {
     /**
      * 음악 삭제
      */
-    public String deleteMusic(MusicDeleteDtoRequest request){
+    public String deleteMusic(String memberUserId, MusicDeleteDtoRequest request){
         Music music = musicRepository.findById(request.getId()).orElseThrow(
                 () -> new IllegalArgumentException("찾을 수 없는 음악입니다.")
         );
+
+        if (!Objects.equals(music.getMember().getUserId(), memberUserId)) {
+            throw new IllegalArgumentException("권한이 없습니다.");
+        }
 
         music.delete();
         return "음악이 삭제되었습니다.";
