@@ -159,6 +159,13 @@
     let currentRoomId = "{{code}}";
     let currentVoteMusicId = null;
 
+    // 최대 재연결 시도 횟수
+    const MAX_RECONNECT_ATTEMPTS = 10;
+    let reconnectAttempts = 0;
+
+    // 재연결 대기 시간 (ms)
+    const RECONNECT_DELAY = 5000;
+
     {{#auth}}userId = "{{auth.username}}"{{/auth}}
 
     {{#votingMusic}}
@@ -179,101 +186,119 @@
         $('#disLikeButton').text(updatedText2);
     {{/votingMusic}}
 
-    const socket = new SockJS('/ws');
-    stompClient = Stomp.over(socket);
+    connect();
 
-    stompClient.connect({}, () => {
-        console.log("Connected to WebSocket");
-        processChatMessage("SYSTEM", null, null, "Welcome to the chat room!");
+    function connect() {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
 
-        if(userId) {
-            stompClient.subscribe('/queue/errors-user-' + userId, function (error) {
-                const data = JSON.parse(error.body);
-                alert('Error: ' + data.message);
-            });
-        }
+        stompClient.connect({}, () => {
+            console.log("Connected to WebSocket");
+            reconnectAttempts = 0;
+            processChatMessage("SYSTEM", null, null, "Welcome to the chat room!");
 
-        // Subscribe to the room topic
-        stompClient.subscribe(`/topic/room/${currentRoomId}`, (message) => {
-            const data = JSON.parse(message.body);
-            const messageType = data.type;
+            if(userId) {
+                stompClient.subscribe('/queue/errors-user-' + userId, function (error) {
+                    const data = JSON.parse(error.body);
+                    alert('Error: ' + data.message);
+                });
+            }
 
-            if (messageType === 'ADD_MUSIC') {
-                $('#youtubePlayModal').modal('hide');
-                $('#youtubePlayer').attr('src', '');
+            // Subscribe to the room topic
+            stompClient.subscribe(`/topic/room/${currentRoomId}`, (message) => {
+                const data = JSON.parse(message.body);
+                const messageType = data.type;
 
-                currentVoteMusicId = data.data.id;
-                $('#musicVoteNonActiveDiv').hide();
-                $('#musicVoteActiveDiv').show();
+                if (messageType === 'ADD_MUSIC') {
+                    $('#youtubePlayModal').modal('hide');
+                    $('#youtubePlayer').attr('src', '');
 
-                $('#votingMusicTitle').text(data.data.name);
-                processYoutubeIframe(data.data.youtubeId, data.data.youtubeTime);
+                    currentVoteMusicId = data.data.id;
+                    $('#musicVoteNonActiveDiv').hide();
+                    $('#musicVoteActiveDiv').show();
 
-                let updatedText1 = $('#likeButton').text().replace(/\(\d+개\)/, `(${data.data.voteLikeCount}개)`);
-                $('#likeButton').text(updatedText1);
-                let updatedText2 = $('#disLikeButton').text().replace(/\(\d+개\)/, `(${data.data.voteDisLikeCount}개)`);
-                $('#disLikeButton').text(updatedText2);
-            } else if (messageType === 'UPDATE_SYNC_MUSIC') {
-                processYoutubeIframe(data.data.youtubeId, data.data.youtubeTime);
-            } else if (messageType === 'TO_PLAYLIST_MUSIC') {
-                currentVoteMusicId = null;
+                    $('#votingMusicTitle').text(data.data.name);
+                    processYoutubeIframe(data.data.youtubeId, data.data.youtubeTime);
 
-                let musicHtml = `
-                    <a href="#" class="list-group-item list-group-item-action d-flex gap-3 py-3 music-item" aria-current="true" data-music-id="${data.data.id}" data-music-name="${data.data.name}" data-youtube-id="${data.data.youtubeId}" data-youtube-time="${data.data.youtubeTime}">
-                        <img src="https://img.youtube.com/vi/${data.data.youtubeId}/hqdefault.jpg" alt="${data.data.name}" width="32" height="32" class="rounded-circle flex-shrink-0">
-                        <div class="d-flex gap-2 w-100 justify-content-between">
-                            <div>
-                                <h6 class="mb-0">${data.data.name}</h6>
-                                <p class="mb-0 opacity-75">Like: ${data.data.voteLikeCount}, DisLike: ${data.data.voteDisLikeCount} (${data.data.createdAt})</p>
-                            </div>
-                            <small class="delete-button opacity-50 text-nowrap" style="cursor: pointer; text-decoration: underline;">X</small>
-                        </div>
-                    </a>
-                `;
-                $('.list-group').prepend(musicHtml);
-                $('#musicListNonActive').hide();
-
-                $('#musicVoteActiveDiv').hide();
-                $('#musicVoteNonActiveDiv').show();
-                $('#youtubeIframe').html('');
-            } else if (messageType === 'DELETE_MUSIC') {
-                if(data.data.isPlaylist === false){
+                    let updatedText1 = $('#likeButton').text().replace(/\(\d+개\)/, `(${data.data.voteLikeCount}개)`);
+                    $('#likeButton').text(updatedText1);
+                    let updatedText2 = $('#disLikeButton').text().replace(/\(\d+개\)/, `(${data.data.voteDisLikeCount}개)`);
+                    $('#disLikeButton').text(updatedText2);
+                } else if (messageType === 'UPDATE_SYNC_MUSIC') {
+                    processYoutubeIframe(data.data.youtubeId, data.data.youtubeTime);
+                } else if (messageType === 'TO_PLAYLIST_MUSIC') {
                     currentVoteMusicId = null;
+
+                    let musicHtml = `
+                        <a href="#" class="list-group-item list-group-item-action d-flex gap-3 py-3 music-item" aria-current="true" data-music-id="${data.data.id}" data-music-name="${data.data.name}" data-youtube-id="${data.data.youtubeId}" data-youtube-time="${data.data.youtubeTime}">
+                            <img src="https://img.youtube.com/vi/${data.data.youtubeId}/hqdefault.jpg" alt="${data.data.name}" width="32" height="32" class="rounded-circle flex-shrink-0">
+                            <div class="d-flex gap-2 w-100 justify-content-between">
+                                <div>
+                                    <h6 class="mb-0">${data.data.name}</h6>
+                                    <p class="mb-0 opacity-75">Like: ${data.data.voteLikeCount}, DisLike: ${data.data.voteDisLikeCount} (${data.data.createdAt})</p>
+                                </div>
+                                <small class="delete-button opacity-50 text-nowrap" style="cursor: pointer; text-decoration: underline;">X</small>
+                            </div>
+                        </a>
+                    `;
+                    $('.list-group').prepend(musicHtml);
+                    $('#musicListNonActive').hide();
+
                     $('#musicVoteActiveDiv').hide();
                     $('#musicVoteNonActiveDiv').show();
                     $('#youtubeIframe').html('');
-                }else{
-                    $(`.list-group-item[data-music-id="${data.data.id}"]`).remove();
+                } else if (messageType === 'DELETE_MUSIC') {
+                    if(data.data.isPlaylist === false){
+                        currentVoteMusicId = null;
+                        $('#musicVoteActiveDiv').hide();
+                        $('#musicVoteNonActiveDiv').show();
+                        $('#youtubeIframe').html('');
+                    }else{
+                        $(`.list-group-item[data-music-id="${data.data.id}"]`).remove();
 
-                    let itemCount = $('.list-group-item').length;
-                    if(itemCount <= 0){
-                        $('#musicListNonActive').show();
-                        $('#musicListNonActive').html(
-                            `<div class="alert alert-success">
-                                    <p class="text-center my-2">
-                                        Music List is empty!
-                                    </p>
-                                </div>
-                        `);
+                        let itemCount = $('.list-group-item').length;
+                        if(itemCount <= 0){
+                            $('#musicListNonActive').show();
+                            $('#musicListNonActive').html(
+                                `<div class="alert alert-success">
+                                        <p class="text-center my-2">
+                                            Music List is empty!
+                                        </p>
+                                    </div>
+                            `);
+                        }
                     }
+                } else if (messageType === 'VOTE_UPDATE_MUSIC') {
+                    let updatedText1 = $('#likeButton').text().replace(/\(\d+개\)/, `(${data.data.info.likeCount}개)`);
+                    $('#likeButton').text(updatedText1);
+                    let updatedText2 = $('#disLikeButton').text().replace(/\(\d+개\)/, `(${data.data.info.disLikeCount}개)`);
+                    $('#disLikeButton').text(updatedText2);
+                } else if (messageType === 'CHAT_MESSAGE_USER') {
+                    processChatMessage("USER", data.data.memberUserId, data.data.memberNick, data.data.message);
+                } else if (messageType === 'CHAT_MESSAGE_SYSTEM') {
+                    processChatMessage("SYSTEM", null, null, data.data);
+                } else {
+                    console.warn("Unknown message type:", messageType);
                 }
-            } else if (messageType === 'VOTE_UPDATE_MUSIC') {
-                let updatedText1 = $('#likeButton').text().replace(/\(\d+개\)/, `(${data.data.info.likeCount}개)`);
-                $('#likeButton').text(updatedText1);
-                let updatedText2 = $('#disLikeButton').text().replace(/\(\d+개\)/, `(${data.data.info.disLikeCount}개)`);
-                $('#disLikeButton').text(updatedText2);
-            } else if (messageType === 'CHAT_MESSAGE_USER') {
-                processChatMessage("USER", data.data.memberUserId, data.data.memberNick, data.data.message);
-            } else if (messageType === 'CHAT_MESSAGE_SYSTEM') {
-                processChatMessage("SYSTEM", null, null, data.data);
-            } else {
-                console.warn("Unknown message type:", messageType);
-            }
-        });
+            });
 
-    }, (error) => {
-        console.error("WebSocket error:", error);
-    });
+        }, (error) => {
+            console.error("WebSocket error:", error);
+            attemptReconnect();
+        });
+    }
+
+    function attemptReconnect() {
+        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+            reconnectAttempts++;
+            console.log(`Reconnecting attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}...`);
+            setTimeout(() => {
+                connect();
+            }, RECONNECT_DELAY);
+        } else {
+            console.error("Max reconnect attempts reached. Could not reconnect to WebSocket.");
+        }
+    }
 
     function processYoutubeIframe(youtubeId, youtubeTime) {
         if (youtubeId) {
