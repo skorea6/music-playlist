@@ -37,6 +37,7 @@ public class PlaylistController {
         List<MusicDetailDtoResponse> listMusic = musicService.listMusic(new MusicDetailDtoRequest(code));
         MusicDetailDtoResponse votingMusic = musicService.votingMusic(new MusicDetailDtoRequest(code));
 
+        model.addAttribute("code", code);
         model.addAttribute("playlistDetail", playlistDetail);
         model.addAttribute("listMusic", listMusic);
         model.addAttribute("votingMusic", votingMusic);

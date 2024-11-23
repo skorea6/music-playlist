@@ -35,7 +35,7 @@ public class UserController {
             return "redirect:/";
         }
 
-        List<PlaylistListDtoResponse> playlistList = playlistService.myList(memberUserId);
+        List<PlaylistListDtoResponse> playlistList = playlistService.myList(userId);
 
         model.addAttribute("memberInfo", member.get().toDto());
         model.addAttribute("myPlaylists", playlistList);
