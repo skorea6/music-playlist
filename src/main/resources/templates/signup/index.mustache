@@ -1,0 +1,58 @@
+{{>layout/header}}
+<main>
+    <div class="py-5 container">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <h1 class="card-title text-center">SignUp</h1>
+                <form action="/member/signup" method="POST">
+                    <div class="row align-items-center">
+                        <div class="mb-3">
+                            <label class="form-label">UserId</label>
+                            <input type="text" class="form-control" name="userId" value="{{#data.userId}}{{data.userId}}{{/data.userId}}">
+                            {{#errors.userId}}
+                                <div class="form-text text-danger">{{.}}</div>
+                            {{/errors.userId}}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Nickname</label>
+                            <input type="text" class="form-control" name="nick" value="{{#data.nick}}{{data.nick}}{{/data.nick}}">
+                            {{#errors.nick}}
+                                <div class="form-text text-danger">{{.}}</div>
+                            {{/errors.nick}}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" name="password" value="{{#data.password}}{{data.password}}{{/data.password}}">
+                            {{#errors.password}}
+                                <div class="form-text text-danger">{{.}}</div>
+                            {{/errors.password}}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Password Rewrite</label>
+                            <input type="password" class="form-control" name="passwordRe" value="{{#data.passwordRe}}{{data.passwordRe}}{{/data.passwordRe}}">
+                            {{#errors.passwordRe}}
+                                <div class="form-text text-danger">{{.}}</div>
+                            {{/errors.passwordRe}}
+                        </div>
+
+                        <div class="form-text text-danger">{{errorMessage}}</div>
+                        <div class="form-text text-info">{{message}}</div>
+                        <button type="submit" class="btn btn-primary w-100">SignUp</button>
+                    </div>
+                </form>
+                <div class="text-end mt-4">
+                    <a href="/member/login">Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<script>
+    $(document).ready(function() {
+        $('title').text('SignUp - Playlist');
+    });
+</script>
+{{>layout/footer}}

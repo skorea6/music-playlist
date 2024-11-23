@@ -1,0 +1,476 @@
+{{>layout/header}}
+<main>
+    <div class="album py-2 bg-body-tertiary">
+        <div class="container">
+            <div class="my-3">
+                {{#playlistDetail}}
+                <h2 class="text-body-emphasis">{{name}}</h2>
+                <p>Room Admin: <b>{{memberUserId}}({{memberNick}})</b> | Share URL: <a href="http://localhost:8080/playlist/{{code}}">http://localhost:8080/playlist/{{code}}</a></p>
+                {{/playlistDetail}}
+                <div class="row py-3 g-4">
+
+                    <div class="col-lg-3 col-md-6 col-12">
+                        <div class="list-group">
+                            {{#listMusic}}
+                                {{#.}}
+                                    <a href="#" class="list-group-item list-group-item-action d-flex gap-3 py-3 music-item" aria-current="true" data-music-id="{{id}}" data-music-name="{{name}}" data-youtube-id="{{youtubeId}}" data-youtube-time="{{youtubeTime}}">
+                                        <img src="https://img.youtube.com/vi/{{youtubeId}}/hqdefault.jpg" alt="twbs" width="32" height="32" class="rounded-circle flex-shrink-0">
+                                        <div class="d-flex gap-2 w-100 justify-content-between">
+                                            <div>
+                                                <h6 class="mb-0">{{name}}</h6>
+                                                <p class="mb-0 opacity-75">Like: {{voteLikeCount}}, DisLike: {{voteDisLikeCount}} ({{createdAt}})</p>
+                                            </div>
+                                            <small class="delete-button opacity-50 text-nowrap" style="cursor: pointer; text-decoration: underline;">X</small>
+                                        </div>
+                                    </a>
+                                {{/.}}
+                            {{/listMusic}}
+                            <div id="musicListNonActive">
+                            {{^listMusic}}
+                                <div class="alert alert-success">
+                                    <p class="text-center my-2">
+                                        Music List is empty!
+                                    </p>
+                                </div>
+                            {{/listMusic}}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 col-md-6 col-12">
+                    {{#playlistDetail}}
+                        {{#isRoomAdmin}}
+                        <div class="row mb-3">
+                            <div class="col-9">
+                                <input type="text" class="form-control" id="addMusicYoutubeLink" placeholder="Enter YouTube link here..." aria-label="YouTube Link Input">
+                            </div>
+                            <div class="col-3">
+                                <button class="btn btn-secondary w-100" id="addMusicButton" type="button">Add Music</button>
+                            </div>
+                        </div>
+                        {{/isRoomAdmin}}
+                    {{/playlistDetail}}
+
+                        <div id="musicVoteNonActiveDiv">
+                            <div class="alert alert-warning" role="alert">
+                                <p class="text-center my-5">
+                                    There are currently no music vote in progress. <br>(Wait until the host adds it)
+                                </p>
+                            </div>
+                        </div>
+
+                        <div id="musicVoteActiveDiv" style="display: none;">
+                            <div class="mb-2">
+                                <span class="badge bg-primary align-middle">Voting Now</span>
+                                <a href="#" class="align-middle">
+                                    <span id="votingMusicTitle" class="h5 text-body-emphasis d-inline">G-DRAGON - HOME SWEET HOME</span>
+                                </a>
+                            </div>
+
+                            <div id="youtubeIframe" class="ratio ratio-16x9 mb-2"></div>
+
+                            <div class="row mb-4">
+                                <div class="col-6">
+                                    <button id="likeButton" class="btn btn-success w-100" type="button">👍 Like (0개)</button>
+                                </div>
+                                <div class="col-6">
+                                    <button id="disLikeButton" class="btn btn-danger w-100" type="button">👎 Dislike (2개)</button>
+                                </div>
+                            </div>
+
+                            {{#playlistDetail}}
+                                {{#isRoomAdmin}}
+                            <div class="row mb-1">
+                                <div class="col-9">
+                                    <input type="text" id="syncUpdateValue" class="form-control" placeholder="Enter video seconds to sync..." aria-label="Time Sync Input">
+                                </div>
+                                <div class="col-3">
+                                    <button id="syncUpdateButton" class="btn btn-secondary w-100" type="button">Sync Video</button>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <button id="musicToPlaylistButton" class="btn btn-info w-100" type="button">Add to Playlist</button>
+                                </div>
+                                <div class="col-6">
+                                    <button id="musicDeleteButton" class="btn btn-warning w-100" type="button">Remove from Playlist</button>
+                                </div>
+                            </div>
+                                {{/isRoomAdmin}}
+                            {{/playlistDetail}}
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-12 col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Live Chat</h5>
+                            </div>
+
+                            <!-- Chat Messages -->
+                            <div class="card-body chat-box" style="height: 400px; overflow-y: auto;"></div>
+
+                            <!-- Chat Input -->
+                            <div class="card-footer">
+                                <div class="input-group">
+                                    <input type="text" id="chatMessageValue" class="form-control" placeholder="Type your message here..." aria-label="Chat message input">
+                                    <button id="chatMessageButton" class="btn btn-primary" type="button">Send</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="youtubePlayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="youtubeModalTitle" class="modal-title">Music Title</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="ratio ratio-16x9">
+                    <iframe id="youtubePlayer"
+                            src=""
+                            title="YouTube video player"
+                            allow="autoplay; fullscreen; picture-in-picture"
+                            allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let userId = null;
+    let stompClient = null;
+    let currentRoomId = "{{code}}";
+    let currentVoteMusicId = null;
+
+    {{#auth}}userId = "{{auth.username}}"{{/auth}}
+
+    {{#votingMusic}}
+        let jsonString = '{"id": "{{id}}", "name": "{{name}}", "voteLikeCount": "{{voteLikeCount}}", "voteDisLikeCount": "{{voteDisLikeCount}}", "youtubeId": "{{youtubeId}}", "youtubeTime": "{{youtubeTime}}"}';
+        const votingMusic = JSON.parse(jsonString.replace(/&quot;/g, '"'));
+        console.log(votingMusic);
+
+        currentVoteMusicId = votingMusic.id;
+        $('#musicVoteNonActiveDiv').hide();
+        $('#musicVoteActiveDiv').show();
+
+        $('#votingMusicTitle').text(votingMusic.name);
+        processYoutubeIframe(votingMusic.youtubeId, votingMusic.youtubeTime);
+
+        let updatedText1 = $('#likeButton').text().replace(/\(\d+개\)/, `(${votingMusic.voteLikeCount}개)`);
+        $('#likeButton').text(updatedText1);
+        let updatedText2 = $('#disLikeButton').text().replace(/\(\d+개\)/, `(${votingMusic.voteDisLikeCount}개)`);
+        $('#disLikeButton').text(updatedText2);
+    {{/votingMusic}}
+
+    const socket = new SockJS('/ws');
+    stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, () => {
+        console.log("Connected to WebSocket");
+        processChatMessage("SYSTEM", null, null, "Welcome to the chat room!");
+
+        if(userId) {
+            stompClient.subscribe('/queue/errors-user-' + userId, function (error) {
+                const data = JSON.parse(error.body);
+                alert('Error: ' + data.message);
+            });
+        }
+
+        // Subscribe to the room topic
+        stompClient.subscribe(`/topic/room/${currentRoomId}`, (message) => {
+            const data = JSON.parse(message.body);
+            const messageType = data.type;
+
+            if (messageType === 'ADD_MUSIC') {
+                $('#youtubePlayModal').modal('hide');
+                $('#youtubePlayer').attr('src', '');
+
+                currentVoteMusicId = data.data.id;
+                $('#musicVoteNonActiveDiv').hide();
+                $('#musicVoteActiveDiv').show();
+
+                $('#votingMusicTitle').text(data.data.name);
+                processYoutubeIframe(data.data.youtubeId, data.data.youtubeTime);
+
+                let updatedText1 = $('#likeButton').text().replace(/\(\d+개\)/, `(${data.data.voteLikeCount}개)`);
+                $('#likeButton').text(updatedText1);
+                let updatedText2 = $('#disLikeButton').text().replace(/\(\d+개\)/, `(${data.data.voteDisLikeCount}개)`);
+                $('#disLikeButton').text(updatedText2);
+            } else if (messageType === 'UPDATE_SYNC_MUSIC') {
+                processYoutubeIframe(data.data.youtubeId, data.data.youtubeTime);
+            } else if (messageType === 'TO_PLAYLIST_MUSIC') {
+                currentVoteMusicId = null;
+
+                let musicHtml = `
+                    <a href="#" class="list-group-item list-group-item-action d-flex gap-3 py-3 music-item" aria-current="true" data-music-id="${data.data.id}" data-music-name="${data.data.name}" data-youtube-id="${data.data.youtubeId}" data-youtube-time="${data.data.youtubeTime}">
+                        <img src="https://img.youtube.com/vi/${data.data.youtubeId}/hqdefault.jpg" alt="${data.data.name}" width="32" height="32" class="rounded-circle flex-shrink-0">
+                        <div class="d-flex gap-2 w-100 justify-content-between">
+                            <div>
+                                <h6 class="mb-0">${data.data.name}</h6>
+                                <p class="mb-0 opacity-75">Like: ${data.data.voteLikeCount}, DisLike: ${data.data.voteDisLikeCount} (${data.data.createdAt})</p>
+                            </div>
+                            <small class="delete-button opacity-50 text-nowrap" style="cursor: pointer; text-decoration: underline;">X</small>
+                        </div>
+                    </a>
+                `;
+                $('.list-group').prepend(musicHtml);
+                $('#musicListNonActive').hide();
+
+                $('#musicVoteActiveDiv').hide();
+                $('#musicVoteNonActiveDiv').show();
+                $('#youtubeIframe').html('');
+            } else if (messageType === 'DELETE_MUSIC') {
+                if(data.data.isPlaylist === false){
+                    currentVoteMusicId = null;
+                    $('#musicVoteActiveDiv').hide();
+                    $('#musicVoteNonActiveDiv').show();
+                    $('#youtubeIframe').html('');
+                }else{
+                    $(`.list-group-item[data-music-id="${data.data.id}"]`).remove();
+
+                    let itemCount = $('.list-group-item').length;
+                    if(itemCount <= 0){
+                        $('#musicListNonActive').show();
+                        $('#musicListNonActive').html(
+                            `<div class="alert alert-success">
+                                    <p class="text-center my-2">
+                                        Music List is empty!
+                                    </p>
+                                </div>
+                        `);
+                    }
+                }
+            } else if (messageType === 'VOTE_UPDATE_MUSIC') {
+                let updatedText1 = $('#likeButton').text().replace(/\(\d+개\)/, `(${data.data.info.likeCount}개)`);
+                $('#likeButton').text(updatedText1);
+                let updatedText2 = $('#disLikeButton').text().replace(/\(\d+개\)/, `(${data.data.info.disLikeCount}개)`);
+                $('#disLikeButton').text(updatedText2);
+            } else if (messageType === 'CHAT_MESSAGE_USER') {
+                processChatMessage("USER", data.data.memberUserId, data.data.memberNick, data.data.message);
+            } else if (messageType === 'CHAT_MESSAGE_SYSTEM') {
+                processChatMessage("SYSTEM", null, null, data.data);
+            } else {
+                console.warn("Unknown message type:", messageType);
+            }
+        });
+
+    }, (error) => {
+        console.error("WebSocket error:", error);
+    });
+
+    function processYoutubeIframe(youtubeId, youtubeTime) {
+        if (youtubeId) {
+            const youtubeUrl = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&start=${youtubeTime}&mute=1&rel=0`;
+            $('#youtubeIframe').html(`<iframe src="${youtubeUrl}" title="YouTube video player" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`);
+        }
+    }
+
+    function processChatMessage(type, memberUserId, memberNick, message) {
+        let nickHtml;
+
+        if (type === "SYSTEM") {
+            nickHtml = `<span class="fw-bold" style="color: purple;">SYSTEM:</span>`;
+        } else {
+            nickHtml = `<a href="/user/${memberUserId}" style="color: inherit;"><span class="fw-bold">${memberNick}:</span></a>`;
+        }
+
+        let chatHtml = `
+            <div class="d-flex flex-row mb-3">
+                <div class="me-2">
+                    ${nickHtml}
+                </div>
+                <div>
+                    <span>${message}</span>
+                </div>
+            </div>
+        `;
+        $('.chat-box').append(chatHtml);
+        $('.chat-box').scrollTop($('.chat-box')[0].scrollHeight);
+    }
+
+
+    $(document).ready(function() {
+        {{#playlistDetail}}$('title').text('{{name}} - Playlist');{{/playlistDetail}}
+
+        $('#addMusicButton').click(function (event) {
+            event.preventDefault();
+
+            const youtubeLink = $('#addMusicYoutubeLink').val();
+            if (!youtubeLink) {
+                alert('Please enter a YouTube link.');
+                return;
+            }
+
+            const request = {
+                code: currentRoomId,
+                youtubeLink: youtubeLink
+            };
+
+            stompClient.send('/app/music/add', {}, JSON.stringify(request));
+
+            $('#addMusicYoutubeLink').val('');
+        });
+
+        $('#syncUpdateButton').click(function (event) {
+            event.preventDefault();
+
+            const value = $('#syncUpdateValue').val();
+            if (!value) {
+                alert('Please enter a sync second.');
+                return;
+            }
+
+            const request = {
+                id: currentVoteMusicId,
+                time: value
+            };
+
+            stompClient.send('/app/music/update-sync', {}, JSON.stringify(request));
+
+            $('#syncUpdateValue').val('');
+        });
+
+        $('#musicToPlaylistButton').click(function (event) {
+            event.preventDefault();
+            const request = {
+                id: currentVoteMusicId
+            };
+
+            stompClient.send('/app/music/to-playlist', {}, JSON.stringify(request));
+        });
+
+        $('#musicDeleteButton').click(function (event) {
+            event.preventDefault();
+            const request = {
+                id: currentVoteMusicId
+            };
+
+            stompClient.send('/app/music/delete', {}, JSON.stringify(request));
+        });
+
+        $('#likeButton').click(function (event) {
+            event.preventDefault();
+
+            if(!userId){
+                alert("Available after logging in.");
+                return;
+            }
+
+            const request = {
+                id: currentVoteMusicId,
+                type: "LIKE"
+            };
+
+            stompClient.send('/app/music/vote/update', {}, JSON.stringify(request));
+        });
+
+        $('#disLikeButton').click(function (event) {
+            event.preventDefault();
+
+            if(!userId){
+                alert("Available after logging in.");
+                return;
+            }
+
+            const request = {
+                id: currentVoteMusicId,
+                type: "DISLIKE"
+            };
+
+            stompClient.send('/app/music/vote/update', {}, JSON.stringify(request));
+        });
+
+        $('#chatMessageValue').keypress(function(event) {
+            if (event.which === 13) {
+                event.preventDefault();
+                $('#chatMessageButton').click();
+            }
+        });
+
+        $('#chatMessageButton').click(function (event) {
+            event.preventDefault();
+
+            const value = $('#chatMessageValue').val();
+            if (!value) {
+                alert('Please enter a message.');
+                return;
+            }
+
+            if(!userId){
+                alert("Available after logging in.");
+                $('#chatMessageValue').val('');
+                return;
+            }
+
+            const request = {
+                code: currentRoomId,
+                message: value
+            };
+
+            stompClient.send('/app/chat/message', {}, JSON.stringify(request));
+            $('#chatMessageValue').val('');
+        });
+
+        $('.list-group').on('click', '.music-item', function (event) {
+            if ($(event.target).hasClass('delete-button')) {
+                return;
+            }
+
+            var youtubeId = $(this).data('youtube-id');
+            var youtubeTime = $(this).data('youtube-time');
+            var musicTitle = $(this).data('music-name');
+
+            var youtubeUrl = 'https://www.youtube.com/embed/' + youtubeId + '?autoplay=1&mute=0&rel=0&start=' + youtubeTime;
+            $('#youtubePlayer').attr('src', youtubeUrl);
+            $('#youtubeModalTitle').text(musicTitle);
+
+            $('#youtubePlayModal').modal('show');
+        });
+
+        // 모달이 닫힐 때 유튜브 재생 중지 (iframe src를 비우기)
+        $('#youtubePlayModal').on('hidden.bs.modal', function () {
+            $('#youtubePlayer').attr('src', '');
+        });
+
+        $('.list-group').on('click', '.delete-button', function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+
+            if(!userId){
+                alert("Available after logging in.");
+                return;
+            }
+
+            let isConfirmed = confirm("Are you sure you want to delete this music item?");
+
+            if (isConfirmed) {
+                let $musicItem = $(this).closest('.list-group-item');
+                let musicId = $musicItem.data('music-id');
+
+                const request = {
+                    id: musicId
+                };
+
+                stompClient.send('/app/music/delete', {}, JSON.stringify(request));
+            }
+        });
+    });
+</script>
+{{>layout/footer}}

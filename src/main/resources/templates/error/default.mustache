@@ -1,0 +1,15 @@
+{{>layout/header}}
+<main>
+    <div class="container">
+        <div class="row py-5">
+            {{^errorMsg}}기본 에러 페이지. (오류 발생){{/errorMsg}}
+            {{#errorMsg}}{{errorMsg}}{{/errorMsg}}
+        </div>
+    </div>
+</main>
+<script>
+    $(document).ready(function() {
+        $('title').text('Error - Playlist');
+    });
+</script>
+{{>layout/footer}}

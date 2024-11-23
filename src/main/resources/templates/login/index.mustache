@@ -1,0 +1,44 @@
+{{>layout/header}}
+<main>
+	<div class="py-5 container">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <h1 class="card-title text-center">Login</h1>
+                <form id="loginForm" action="/member/login/action" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">UserId</label>
+                        <input type="text" class="form-control" id="userId" name="userId" value="{{#userId}}{{userId}}{{/userId}}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password">
+                    </div>
+
+                    {{#error}}
+                    <div class="form-text text-danger">Login failed. Check your ID and password.</div>
+                    {{/error}}
+                    <div class="form-text text-info">{{message}}</div>
+
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                </form>
+                <div class="text-end mt-4">
+                    <a href="/member/signup">SignUp</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+        const username = document.getElementById('userId').value;
+        const password = document.getElementById('password').value;
+        if (!username || !password) {
+            event.preventDefault();
+            alert('Please enter your ID and password.');
+        }
+    });
+    $(document).ready(function() {
+        $('title').text('Login - Playlist');
+    });
+</script>
+{{>layout/footer}}

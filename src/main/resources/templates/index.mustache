@@ -1,0 +1,149 @@
+{{>layout/header}}
+<main>
+    <section class="py-4 text-center container">
+        <div class="row py-lg-1">
+            <div class="col-lg-6 col-md-8 mx-auto">
+                <h1 class="fw-light">Sharing a music playlist</h1>
+                <p class="lead text-body-secondary">You can create a playlist while multiple people listen to the music in real time.</p>
+                <p>
+                    <a href="#" class="btn btn-danger my-2" data-bs-toggle="modal" data-bs-target="#playlistAddModal">Make a Playlist</a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <div class="album py-2 bg-body-tertiary">
+        <div class="container">
+            <div class="my-3">
+                <h2 class="text-body-emphasis">Playlist List</h2>
+                <p>List of playlist that users made.</p>
+
+                <div class="row py-3 g-4">
+                    {{#playlists}}
+                    <div class="col-lg-4 col-md-6 col-12">
+                        <a href="/playlist/{{code}}"><h5 class="text-body-emphasis">{{name}}</h5></a>
+                        <div class="list-group">
+                            {{#musics}}
+                                {{#.}}
+                                    <a href="#" class="list-group-item list-group-item-action d-flex gap-3 py-3 music-item" aria-current="true" data-music-id="{{id}}" data-music-name="{{name}}" data-youtube-id="{{youtubeId}}" data-youtube-time="{{youtubeTime}}">
+                                        <img src="https://img.youtube.com/vi/{{youtubeId}}/hqdefault.jpg" alt="twbs" width="32" height="32" class="rounded-circle flex-shrink-0">
+                                        <div class="d-flex gap-2 w-100 justify-content-between">
+                                            <div>
+                                                {{^isPlaylist}}<span class="badge bg-primary align-middle">Voting</span> {{/isPlaylist}}<h6 class="mb-0 d-inline align-middle">{{name}}</h6>
+                                                <p class="mb-0 opacity-75">Like: {{voteLikeCount}}, DisLike: {{voteDisLikeCount}} ({{createdAt}})</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                {{/.}}
+                            {{/musics}}
+                            {{^musics}}
+                                <div class="alert alert-success">
+                                    <p class="text-center my-2">
+                                        Music List is empty!
+                                    </p>
+                                </div>
+                            {{/musics}}
+                        </div>
+                    </div>
+                    {{/playlists}}
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="youtubePlayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="youtubeModalTitle" class="modal-title">Music Title</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="ratio ratio-16x9">
+                    <iframe id="youtubePlayer"
+                            src=""
+                            title="YouTube video player"
+                            allow="autoplay; fullscreen; picture-in-picture"
+                            allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="playlistAddModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Make New Playlist</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-control" name="playlistName" value="">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="createPlaylistButton">Make Playlist</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    let isLogined = false;
+    {{#auth}}isLogined = true;{{/auth}}
+
+    $(document).ready(function() {
+        $('#createPlaylistButton').click(function() {
+            if(isLogined){
+                const playlistName = $('input[name="playlistName"]').val();
+                const placeData = {
+                    name: playlistName
+                };
+
+                $.ajax({
+                    url: '/api/playlist/create',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(placeData),
+                    success: function(response) {
+                        alert("Successfully created a playlist!");
+                        location.href = '/playlist/' + response.data.code;
+                    },
+                    error: function(xhr, status, error) {
+                        const errorResponse = JSON.parse(xhr.responseText); // 서버 응답을 JSON으로 파싱
+                        alert(errorResponse.statusMessage);  // 오류 메시지 표시
+                    }
+                });
+            }else{
+                alert("Available after logging in.");
+            }
+        });
+
+        $('.list-group').on('click', '.music-item', function () {
+            var youtubeId = $(this).data('youtube-id');
+            var youtubeTime = $(this).data('youtube-time');
+            var musicTitle = $(this).data('music-name');
+
+            var youtubeUrl = 'https://www.youtube.com/embed/' + youtubeId + '?autoplay=1&mute=0&rel=0&start=' + youtubeTime;
+            $('#youtubePlayer').attr('src', youtubeUrl);
+            $('#youtubeModalTitle').text(musicTitle);
+
+            $('#youtubePlayModal').modal('show');
+        });
+
+        // 모달이 닫힐 때 유튜브 재생 중지 (iframe src를 비우기)
+        $('#youtubePlayModal').on('hidden.bs.modal', function () {
+            $('#youtubePlayer').attr('src', '');
+        });
+    });
+</script>
+{{>layout/footer}}

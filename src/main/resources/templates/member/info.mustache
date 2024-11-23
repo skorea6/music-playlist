@@ -1,0 +1,131 @@
+{{>layout/header}}
+<main>
+    <div class="album py-2 bg-body-tertiary">
+        <div class="container">
+            <div class="row pt-3">
+                <div class="col-12">
+                    <h1 class="posts-entry-title" style="font-size: 30px;">'{{memberInfo.nick}}' Profile information</h1>
+                </div>
+            </div>
+            <div class="row justify-content-center" style="padding-top: 5px">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            Detailed profile information
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-4 col-sm-6">
+                                    <div class="d-flex">
+                                        <label style="margin-right: 10px;"><strong>☉ UserID: </strong></label>
+                                        <p style="color:blue;">{{memberInfo.userId}}</p>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-sm-6">
+                                    <div class="d-flex">
+                                        <label style="margin-right: 10px;"><strong>☉ User Nick: </strong></label>
+                                        <p style="color:blue;">{{memberInfo.nick}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="album py-2 bg-body-tertiary">
+        <div class="container">
+            <div class="my-3">
+                <h2 class="text-body-emphasis">Playlist created by the user</h2>
+                <p>This is a playlist created by user '{{memberInfo.nick}}'.</p>
+
+                <div class="row py-2 g-4">
+                    {{#myPlaylists}}
+                        <div class="col-lg-4 col-md-6 col-12">
+                            <a href="/playlist/{{code}}"><h5 class="text-body-emphasis">{{name}}</h5></a>
+                            <div class="list-group">
+                                {{#musics}}
+                                    {{#.}}
+                                        <a href="#" class="list-group-item list-group-item-action d-flex gap-3 py-3 music-item" aria-current="true" data-music-id="{{id}}" data-music-name="{{name}}" data-youtube-id="{{youtubeId}}" data-youtube-time="{{youtubeTime}}">
+                                            <img src="https://img.youtube.com/vi/{{youtubeId}}/hqdefault.jpg" alt="twbs" width="32" height="32" class="rounded-circle flex-shrink-0">
+                                            <div class="d-flex gap-2 w-100 justify-content-between">
+                                                <div>
+                                                    {{^isPlaylist}}<span class="badge bg-primary align-middle">Voting</span> {{/isPlaylist}}<h6 class="mb-0 d-inline align-middle">{{name}}</h6>
+                                                    <p class="mb-0 opacity-75">Like: {{voteLikeCount}}, DisLike: {{voteDisLikeCount}} ({{createdAt}})</p>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    {{/.}}
+                                {{/musics}}
+                                {{^musics}}
+                                    <div class="alert alert-success">
+                                        <p class="text-center my-2">
+                                            Music List is empty!
+                                        </p>
+                                    </div>
+                                {{/musics}}
+                            </div>
+                        </div>
+                    {{/myPlaylists}}
+                    {{^myPlaylists}}
+                        <div class="alert alert-warning">
+                            <p class="text-center my-5">
+                                There are no playlists.
+                            </p>
+                        </div>
+                    {{/myPlaylists}}
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+<div class="modal fade" id="youtubePlayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="youtubeModalTitle" class="modal-title">Music Title</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="ratio ratio-16x9">
+                    <iframe id="youtubePlayer"
+                            src=""
+                            title="YouTube video player"
+                            allow="autoplay; fullscreen; picture-in-picture"
+                            allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+        $('title').text('{{memberInfo.nick}} | Profile');
+
+        $('.list-group').on('click', '.music-item', function () {
+            var youtubeId = $(this).data('youtube-id');
+            var youtubeTime = $(this).data('youtube-time');
+            var musicTitle = $(this).data('music-name');
+
+            var youtubeUrl = 'https://www.youtube.com/embed/' + youtubeId + '?autoplay=1&mute=0&rel=0&start=' + youtubeTime;
+            $('#youtubePlayer').attr('src', youtubeUrl);
+            $('#youtubeModalTitle').text(musicTitle);
+
+            $('#youtubePlayModal').modal('show');
+        });
+
+        // 모달이 닫힐 때 유튜브 재생 중지 (iframe src를 비우기)
+        $('#youtubePlayModal').on('hidden.bs.modal', function () {
+            $('#youtubePlayer').attr('src', '');
+        });
+    });
+</script>
+{{>layout/footer}}
