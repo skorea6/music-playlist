@@ -1,4 +1,4 @@
-package com.example.snapcampus.controller;
+package com.example.musicplaylist.controller;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
