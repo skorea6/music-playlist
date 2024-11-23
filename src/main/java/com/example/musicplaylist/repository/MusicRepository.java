@@ -9,4 +9,5 @@ import java.util.List;
 public interface MusicRepository extends JpaRepository<Music, Long>{
     List<Music> findAllByPlaylistAndIsPlaylistAndIsDeletedOrderByCreatedAtDesc(Playlist playlist, Boolean isPlaylist, Boolean isDeleted);
     Music findByPlaylistAndIsPlaylistAndIsDeleted(Playlist playlist, Boolean isPlaylist, Boolean isDeleted);
+    Music findByPlaylistAndYoutubeIdAndIsPlaylistAndIsDeleted(Playlist playlist, String youtubeId, Boolean isPlaylist, Boolean isDeleted);
 }

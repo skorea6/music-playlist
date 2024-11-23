@@ -59,9 +59,11 @@ public class MusicVoteService {
         musicRepository.save(music);
 
         return new MusicVoteUpdateDtoResponse(
-                request.getType().name(),
-                status,
-                new MusicVoteInfoDtoResponse(likeCount, disLikeCount)
+            member.getUserId(),
+            member.getNick(),
+            request.getType().name(),
+            status,
+            new MusicVoteInfoDtoResponse(likeCount, disLikeCount)
         );
     }
 }

@@ -1,8 +1,8 @@
 package com.example.musicplaylist.service;
 
 import com.example.musicplaylist.dto.request.music.*;
-import com.example.musicplaylist.dto.response.music.MusicAddDtoResponse;
 import com.example.musicplaylist.dto.response.music.MusicDetailDtoResponse;
+import com.example.musicplaylist.dto.response.music.MusicUpdateSyncDtoResponse;
 import com.example.musicplaylist.entity.Music;
 import com.example.musicplaylist.entity.Playlist;
 import com.example.musicplaylist.repository.MemberRepository;
@@ -67,10 +67,7 @@ public class MusicService {
     /**
      * 음악 추가 (with youtube link)
      */
-    public MusicAddDtoResponse addMusic(String memberUserId, MusicAddDtoRequest request) {
-        // TODO: 개수 제한 (최대 20개)
-        // TODO: 플레이리스트 유저당 100개 최대
-
+    public MusicDetailDtoResponse addMusic(String memberUserId, MusicAddDtoRequest request) {
         Playlist playlist = playlistRepository.findByCode(request.getCode());
         if (playlist == null) {
             throw new IllegalArgumentException("찾을 수 없는 플레이리스트입니다.");
@@ -82,21 +79,25 @@ public class MusicService {
         }
 
         if (!Objects.equals(playlist.getMember().getUserId(), memberUserId)) {
-            throw new IllegalArgumentException("권한이 없습니다.");
+            throw new IllegalArgumentException("호스트 권한이 없습니다.");
         }
 
         Music votingMusic =
                 musicRepository.findByPlaylistAndIsPlaylistAndIsDeleted(playlist, false, false);
-
         if (votingMusic != null) {
             throw new IllegalArgumentException("투표가 진행중인 음악이 있습니다. 처리해주세요.");
+        }
+
+        Music duplicateMusic = musicRepository.findByPlaylistAndYoutubeIdAndIsPlaylistAndIsDeleted(playlist, youtubeId, true, false);
+        if (duplicateMusic != null) {
+            throw new IllegalArgumentException("이미 등록된 음악입니다.");
         }
 
         try {
             Document doc = Jsoup.connect(generateYouTubeUrl(youtubeId, null))
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
                     .get();
-            String title = doc.title();
+            String title = doc.title().replace(" - YouTube", "");
             Music entity = new Music(
                     memberRepository.findByUserId(memberUserId),
                     playlist,
@@ -105,7 +106,7 @@ public class MusicService {
             );
 
             Music music = musicRepository.save(entity);
-            return new MusicAddDtoResponse(music.getId());
+            return music.toDetailDto();
         }catch (Exception e){
             throw new IllegalArgumentException("유튜브 링크에 접속할 수 없습니다.");
         }
@@ -114,51 +115,61 @@ public class MusicService {
     /**
      * 유튜브 영상 싱크 맞추기
      */
-    public String updateSync(String memberUserId, MusicUpdateSyncDtoRequest request){
+    public MusicUpdateSyncDtoResponse updateSync(String memberUserId, MusicUpdateSyncDtoRequest request){
         Music music = musicRepository.findById(request.getId()).orElseThrow(
                 () -> new IllegalArgumentException("찾을 수 없는 음악입니다.")
         );
 
         if (!Objects.equals(music.getMember().getUserId(), memberUserId)) {
-            throw new IllegalArgumentException("권한이 없습니다.");
+            throw new IllegalArgumentException("호스트 권한이 없습니다.");
         }
 
         music.updateSync(request.getTime());
-        return "음악 영상의 싱크를 맞췄습니다.";
+        return new MusicUpdateSyncDtoResponse(music.getYoutubeId(), music.getYoutubeTime());
     }
 
     /**
      * 음악을 플레이리스트로 이동
      */
-    public String toPlaylist(String memberUserId, MusicUpdateToPlaylistDtoRequest request){
+    public MusicDetailDtoResponse toPlaylist(String memberUserId, MusicUpdateToPlaylistDtoRequest request){
         Music music = musicRepository.findById(request.getId()).orElseThrow(
                 () -> new IllegalArgumentException("찾을 수 없는 음악입니다.")
         );
 
         if (!Objects.equals(music.getMember().getUserId(), memberUserId)) {
-            throw new IllegalArgumentException("권한이 없습니다.");
+            throw new IllegalArgumentException("호스트 권한이 없습니다.");
         }
 
         music.updateToPlaylist();
-        return "음악을 플레이리스트로 이동했습니다.";
+        return music.toDetailDto();
     }
 
     /**
      * 음악 삭제
      */
-    public String deleteMusic(String memberUserId, MusicDeleteDtoRequest request){
+    public MusicDetailDtoResponse deleteMusic(String memberUserId, MusicDeleteDtoRequest request){
         Music music = musicRepository.findById(request.getId()).orElseThrow(
                 () -> new IllegalArgumentException("찾을 수 없는 음악입니다.")
         );
 
         if (!Objects.equals(music.getMember().getUserId(), memberUserId)) {
-            throw new IllegalArgumentException("권한이 없습니다.");
+            throw new IllegalArgumentException("호스트 권한이 없습니다.");
         }
 
         music.delete();
-        return "음악이 삭제되었습니다.";
+        return music.toDetailDto();
     }
 
+    /**
+     * 음악을 통해 플레이리스트 code 조회
+     */
+    public String findPlaylistCodeWithMusic(Long id) {
+        Music music = musicRepository.findById(id).orElseThrow(
+                () -> new IllegalArgumentException("찾을 수 없는 음악입니다.")
+        );
+
+        return music.getPlaylist().getCode();
+    }
 
 
     public static String extractVideoId(String url) {
