@@ -66,6 +66,7 @@ public class Playlist extends AuditingFields{
                 code, name, Objects.equals(loginUserId, member.getUserId()),
                 member.getUserId(), member.getNick(),
                 musics.stream()
+                    .filter(x -> !x.getIsDeleted())
                     .map(Music::toDetailDto)
                     .collect(Collectors.toList())
         );
