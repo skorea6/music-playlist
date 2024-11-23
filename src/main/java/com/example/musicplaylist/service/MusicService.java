@@ -57,8 +57,8 @@ public class MusicService {
         Music music =
                 musicRepository.findByPlaylistAndIsPlaylistAndIsDeleted(playlist, false, false);
 
-        if (music == null) {
-            throw new IllegalArgumentException("현재 투표중인 음악이 없습니다.");
+        if(music == null){
+            return null;
         }
 
         return music.toDetailDto();
@@ -83,6 +83,13 @@ public class MusicService {
 
         if (!Objects.equals(playlist.getMember().getUserId(), memberUserId)) {
             throw new IllegalArgumentException("권한이 없습니다.");
+        }
+
+        Music votingMusic =
+                musicRepository.findByPlaylistAndIsPlaylistAndIsDeleted(playlist, false, false);
+
+        if (votingMusic != null) {
+            throw new IllegalArgumentException("투표가 진행중인 음악이 있습니다. 처리해주세요.");
         }
 
         try {
