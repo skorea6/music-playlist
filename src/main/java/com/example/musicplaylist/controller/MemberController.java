@@ -38,7 +38,8 @@ public class MemberController {
 
 
     @GetMapping("/signup")
-    public String signup() {
+    public String signup(HttpServletRequest request, Model model) {
+        basicFlashProcess(request, model, new MemberSignUpDtoRequest());
         return "signup/index";
     }
 
