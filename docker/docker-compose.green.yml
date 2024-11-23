@@ -1,0 +1,17 @@
+#green
+version: '3'
+services:
+  backend:
+    build: .
+    ports:
+      - "8212:80"
+    container_name: spring-musicplaylist-green
+    environment:
+      - TZ=Asia/Seoul
+    networks:
+      - servernetwork
+
+networks:
+  servernetwork:
+    external: true
+    driver: bridge
