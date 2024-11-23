@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.time.format.DateTimeFormatter;
+
 
 @Getter
 @ToString(callSuper = true)
@@ -42,8 +44,8 @@ public class Music extends AuditingFields{
     @Column(nullable = false)
     private String youtubeId; // 유튜브 비디오 ID
 
-    @Column
-    private Long youtubeTime; // 유튜브 영상 싱크
+    @Column(nullable = false)
+    private Long youtubeTime = 0L; // 유튜브 영상 싱크
 
     @Column(nullable = false)
     private Boolean isPlaylist = false; // 현재 플레이리스트에 등록되었는지 여부
@@ -82,7 +84,7 @@ public class Music extends AuditingFields{
     public MusicDetailDtoResponse toDetailDto() {
         return new MusicDetailDtoResponse(
                 id, name, member.getUserId(), member.getNick(),
-                voteLikeCount, voteDisLikeCount, youtubeId, youtubeTime, isPlaylist
+                voteLikeCount, voteDisLikeCount, youtubeId, youtubeTime, isPlaylist, createdAt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
         );
     }
 }

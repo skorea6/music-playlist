@@ -16,8 +16,9 @@ public class MusicDetailDtoResponse {
     private String youtubeId;
     private Long youtubeTime;
     private Boolean isPlaylist;
+    private String createdAt;
 
-    public MusicDetailDtoResponse(Long id, String name, String memberUserId, String memberNick, Long voteLikeCount, Long voteDisLikeCount, String youtubeId, Long youtubeTime, Boolean isPlaylist) {
+    public MusicDetailDtoResponse(Long id, String name, String memberUserId, String memberNick, Long voteLikeCount, Long voteDisLikeCount, String youtubeId, Long youtubeTime, Boolean isPlaylist, String createdAt) {
         this.id = id;
         this.name = name;
         this.memberUserId = memberUserId;
@@ -27,5 +28,6 @@ public class MusicDetailDtoResponse {
         this.youtubeId = youtubeId;
         this.youtubeTime = youtubeTime;
         this.isPlaylist = isPlaylist;
+        this.createdAt = createdAt;
     }
 }
