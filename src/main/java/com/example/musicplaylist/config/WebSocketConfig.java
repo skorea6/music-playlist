@@ -2,14 +2,10 @@ package com.example.musicplaylist.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
-import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
-import org.springframework.web.socket.handler.WebSocketHandlerDecorator;
 
-import java.security.Principal;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -30,6 +26,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws").setAllowedOriginPatterns("*").addInterceptors(handshakeInterceptor).withSockJS(); // WebSocket 연결 엔드포인트
+        registry.addEndpoint("/ws").setAllowedOriginPatterns("http://localhost:8080", "https://playlist.abz.kr").addInterceptors(handshakeInterceptor).withSockJS(); // WebSocket 연결 엔드포인트
     }
 }

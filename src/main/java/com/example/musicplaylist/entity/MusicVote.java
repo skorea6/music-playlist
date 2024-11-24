@@ -26,7 +26,7 @@ public class MusicVote extends AuditingFields{
     private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", foreignKey = @ForeignKey(name = "fk_music_vote_music_id"))
+    @JoinColumn(name = "post_id", foreignKey = @ForeignKey(name = "fk_music_vote_music_id")) // TODO: music_id 로 바꾸기
     @ToString.Exclude
     private Music music;
 
