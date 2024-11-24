@@ -23,6 +23,8 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 
 @Controller
 public class WebSocketMusicController {
@@ -30,6 +32,7 @@ public class WebSocketMusicController {
     private final MusicVoteService musicVoteService;
     private final ChatService chatService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ReentrantLock musicLock = new ReentrantLock();
 
     public WebSocketMusicController(MusicService musicService, MusicVoteService musicVoteService, ChatService chatService, SimpMessagingTemplate messagingTemplate) {
         this.musicService = musicService;
@@ -41,87 +44,112 @@ public class WebSocketMusicController {
     // 음악 추가
     @MessageMapping("/music/add")
     public void addMusic(@Payload MusicAddDtoRequest request, StompHeaderAccessor accessor) {
-        handleWebSocketAction(request.getCode(), accessor, () -> {
-            checkIsLogined(accessor);
-            String memberUserId = getMemberUserId(accessor);
+        musicLock.lock();
+        try {
+            handleWebSocketAction(request.getCode(), accessor, () -> {
+                checkIsLogined(accessor);
+                String memberUserId = getMemberUserId(accessor);
 
-            MusicDetailDtoResponse response = musicService.addMusic(memberUserId, request);
+                MusicDetailDtoResponse response = musicService.addMusic(memberUserId, request);
 
-            WebSocketMessage<MusicDetailDtoResponse> webSocketMessage = new WebSocketMessage<>("ADD_MUSIC", response);
-            messagingTemplate.convertAndSend("/topic/room/" + request.getCode(), webSocketMessage);
+                WebSocketMessage<MusicDetailDtoResponse> webSocketMessage = new WebSocketMessage<>("ADD_MUSIC", response);
+                messagingTemplate.convertAndSend("/topic/room/" + request.getCode(), webSocketMessage);
 
-            sendSystemMessage(request.getCode(), "Successfully Music added!");
-        });
+                sendSystemMessage(request.getCode(), "Successfully Music added!");
+            });
+        } finally {
+            musicLock.unlock();
+        }
     }
 
     // 동기화 업데이트
     @MessageMapping("/music/update-sync")
     public void updateSync(@Payload MusicUpdateSyncDtoRequest request, StompHeaderAccessor accessor) {
-        String code = musicService.findPlaylistCodeWithMusic(request.getId());
-        handleWebSocketAction(code, accessor, () -> {
-            checkIsLogined(accessor);
-            String memberUserId = getMemberUserId(accessor);
+        musicLock.lock();
+        try {
+            String code = musicService.findPlaylistCodeWithMusic(request.getId());
+            handleWebSocketAction(code, accessor, () -> {
+                checkIsLogined(accessor);
+                String memberUserId = getMemberUserId(accessor);
 
-            MusicUpdateSyncDtoResponse response = musicService.updateSync(memberUserId, request);
+                MusicUpdateSyncDtoResponse response = musicService.updateSync(memberUserId, request);
 
-            WebSocketMessage<MusicUpdateSyncDtoResponse> webSocketMessage = new WebSocketMessage<>("UPDATE_SYNC_MUSIC", response);
-            messagingTemplate.convertAndSend("/topic/room/" + code, webSocketMessage);
+                WebSocketMessage<MusicUpdateSyncDtoResponse> webSocketMessage = new WebSocketMessage<>("UPDATE_SYNC_MUSIC", response);
+                messagingTemplate.convertAndSend("/topic/room/" + code, webSocketMessage);
 
-            sendSystemMessage(code, "Successfully updated music sync!");
-        });
+                sendSystemMessage(code, "Successfully updated music sync!");
+            });
+        } finally {
+            musicLock.unlock();
+        }
     }
 
     // 플레이리스트로 이동
     @MessageMapping("/music/to-playlist")
     public void toPlaylist(@Payload MusicUpdateToPlaylistDtoRequest request, StompHeaderAccessor accessor) {
-        String code = musicService.findPlaylistCodeWithMusic(request.getId());
-        handleWebSocketAction(code, accessor, () -> {
-            checkIsLogined(accessor);
-            String memberUserId = getMemberUserId(accessor);
+        musicLock.lock();
+        try {
+            String code = musicService.findPlaylistCodeWithMusic(request.getId());
+            handleWebSocketAction(code, accessor, () -> {
+                checkIsLogined(accessor);
+                String memberUserId = getMemberUserId(accessor);
 
-            MusicDetailDtoResponse response = musicService.toPlaylist(memberUserId, request);
+                MusicDetailDtoResponse response = musicService.toPlaylist(memberUserId, request);
 
-            WebSocketMessage<MusicDetailDtoResponse> webSocketMessage = new WebSocketMessage<>("TO_PLAYLIST_MUSIC", response);
-            messagingTemplate.convertAndSend("/topic/room/" + code, webSocketMessage);
+                WebSocketMessage<MusicDetailDtoResponse> webSocketMessage = new WebSocketMessage<>("TO_PLAYLIST_MUSIC", response);
+                messagingTemplate.convertAndSend("/topic/room/" + code, webSocketMessage);
 
-            sendSystemMessage(code, "The music has been moved to a playlist!");
-        });
+                sendSystemMessage(code, "The music has been moved to a playlist!");
+            });
+        } finally {
+            musicLock.unlock();
+        }
     }
 
     // 음악 삭제
     @MessageMapping("/music/delete")
     public void deleteMusic(@Payload MusicDeleteDtoRequest request, StompHeaderAccessor accessor) {
-        String code = musicService.findPlaylistCodeWithMusic(request.getId());
-        handleWebSocketAction(code, accessor, () -> {
-            checkIsLogined(accessor);
-            String memberUserId = getMemberUserId(accessor);
+        musicLock.lock();
+        try {
+            String code = musicService.findPlaylistCodeWithMusic(request.getId());
+            handleWebSocketAction(code, accessor, () -> {
+                checkIsLogined(accessor);
+                String memberUserId = getMemberUserId(accessor);
 
-            MusicDetailDtoResponse response = musicService.deleteMusic(memberUserId, request);
-            WebSocketMessage<MusicDetailDtoResponse> webSocketMessage = new WebSocketMessage<>("DELETE_MUSIC", response);
-            messagingTemplate.convertAndSend("/topic/room/" + code, webSocketMessage);
+                MusicDetailDtoResponse response = musicService.deleteMusic(memberUserId, request);
+                WebSocketMessage<MusicDetailDtoResponse> webSocketMessage = new WebSocketMessage<>("DELETE_MUSIC", response);
+                messagingTemplate.convertAndSend("/topic/room/" + code, webSocketMessage);
 
-            sendSystemMessage(code, "Music has been removed!");
-        });
+                sendSystemMessage(code, "Music has been removed!");
+            });
+        } finally {
+            musicLock.unlock();
+        }
     }
 
     // 투표 업데이트
     @MessageMapping("/music/vote/update")
     public void updateVote(@Payload MusicVoteUpdateDtoRequest request, StompHeaderAccessor accessor) {
-        String code = musicService.findPlaylistCodeWithMusic(request.getId());
-        handleWebSocketAction(code, accessor, () -> {
-            checkIsLogined(accessor);
-            String memberUserId = getMemberUserId(accessor);
+        musicLock.lock();
+        try {
+            String code = musicService.findPlaylistCodeWithMusic(request.getId());
+            handleWebSocketAction(code, accessor, () -> {
+                checkIsLogined(accessor);
+                String memberUserId = getMemberUserId(accessor);
 
-            MusicVoteUpdateDtoResponse response = musicVoteService.update(memberUserId, request);
-            WebSocketMessage<MusicVoteUpdateDtoResponse> webSocketMessage = new WebSocketMessage<>("VOTE_UPDATE_MUSIC", response);
-            messagingTemplate.convertAndSend("/topic/room/" + code, webSocketMessage);
+                MusicVoteUpdateDtoResponse response = musicVoteService.update(memberUserId, request);
+                WebSocketMessage<MusicVoteUpdateDtoResponse> webSocketMessage = new WebSocketMessage<>("VOTE_UPDATE_MUSIC", response);
+                messagingTemplate.convertAndSend("/topic/room/" + code, webSocketMessage);
 
-            String action = response.getStatus() ? "clicked" : "canceled";
-            String type = response.getType().equals("LIKE") ? "LIKE" : "DISLIKE";
+                String action = response.getStatus() ? "clicked" : "canceled";
+                String type = response.getType().equals("LIKE") ? "LIKE" : "DISLIKE";
 
-            sendSystemMessage(code, "User " + response.getMemberNick()
-                    + " " + action + " the " + type + " button!");
-        });
+                sendSystemMessage(code, "User " + response.getMemberNick()
+                        + " " + action + " the " + type + " button!");
+            });
+        } finally {
+            musicLock.unlock();
+        }
     }
 
     // 투표 업데이트
